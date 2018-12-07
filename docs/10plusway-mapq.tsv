@@ -1,0 +1,7 @@
+dset	format	protocol	real	user	sys	notes
+10plusway-mapq	hdf5_gzip2	local	197.64	166.16	3.63	baseline 2018-12-06
+10plusway-mapq	hdf5_uncmp	local	212.16	167.67	3.88	baseline 2018-12-06
+10plusway-mapq	mmap	local	105.12	81.34	2.86	baseline 2018-12-06
+10plusway-mapq	hdf5_gzip2	udc	200.03	177.13	10.34	baseline 2018-12-06
+10plusway-mapq	hdf5_uncmp	udc	200.90	177.38	10.44	baseline 2018-12-06
+10plusway-mapq	mmap	udc	3877.43	1435.55	2404.74	baseline 2018-12-06

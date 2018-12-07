@@ -1,0 +1,21 @@
+* misc notes:
+** commands
+- h5repack -v -f NONE file1 file2
+  h5repack -v -f GZIP=1 file1 file2
+  h5repack -f UD=307,0,1,9 file1 file2   # bzip
+- halExtract --outputFormat mmap  --mmapFileSize 256
+
+* data sets:
+- ~84G  https://s3-us-west-2.amazonaws.com/alignment-output/10plusway-mapq.hal
+- ~27G https://s3-us-west-2.amazonaws.com/alignment-output/initial_primates_nh.hal
+
+* 10plusway-mapq.hal tests
+** data set
+- source: https://s3-us-west-2.amazonaws.com/alignment-output/10plusway-mapq.hal
+- 10plusway-mapq.hdf5_gzip2.hal HDF5/gzip=2    42G
+- 10plusway-mapq.hdf5_gzip5.hal HDF5/gzip=5    39G
+- 10plusway-mapq.hdf5_gzip9.hal HDF5/gzip=9    39G
+- 10plusway-mapq.hdf5_uncmp.hal HDF5/nocmp     164G
+- 10plusway-mapq.mmap.hal                      179G
+
+* Benchmarks on 10plusway-mapq
