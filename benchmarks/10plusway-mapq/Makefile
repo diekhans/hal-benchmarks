@@ -1,15 +1,14 @@
 # defaults
 protocols = local udc
-hals = 10plusway-mapq.hdf5_gzip2 10plusway-mapq.mmap
-# 10plusway-mapq.hdf5_uncmp
+hals = 10plusway-mapq.hdf5_gzip2 10plusway-mapq.hdf5_uncmp 10plusway-mapq.mmap
 resultsDir = results
 
 # UDC debugging
-udcDebug = yes
+udcDebug = no
 ifeq (${udcDebug},yes)
    udcVerbose = --udcVerbose
    protocols = udc
-   hals = 10plusway-mapq.mmap
+   #hals = 10plusway-mapq.mmap
 endif
 
 # gprof
@@ -24,7 +23,7 @@ endif
 master = no
 ifeq (${master},yes)
   binDir = ~/compbio/compartiveGenomics/projs/hal/src/hal-master-w-make/bin
-  hals = 10plusway-mapq.hdf5_gzip2
+  hals = 10plusway-mapq.hdf5_gzip2 10plusway-mapq.hdf5_uncmp
   resultsDir = results_master
 else
   binDir = ~/compbio/compartiveGenomics/projs/hal/src/hal/bin

@@ -72,12 +72,17 @@ def parseUdcVerboseOutput(timeLog):
     with open(timeLog) as fh:
         for line in fh:
              countUdcMsg(line, stats)
-    return stats
+    if stats.readCnt > 0:
+        return stats
+    else:
+        return None   # not udc
 
 def collectRunResults(timeLogs):
     results = []
     for timeLog in timeLogs:
-        results.append(parseUdcVerboseOutput(timeLog))
+        r = parseUdcVerboseOutput(timeLog)
+        if r is not None:
+            results.append(r)
     return results
 
 def outputResults(results, notes, outFh):
