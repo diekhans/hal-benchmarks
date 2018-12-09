@@ -11,8 +11,11 @@ def isoday():
     return datetime.datetime.now().strftime('%Y-%m-%d')
 
 def parseTimeFileMeta(timeLog):
-    # 10plusway-mapq.hdf5_gzip2.local.1.time
-    # 10plusway-mapq.mmap.local.1.time
+    # 10plusway-mapq.hdf5_gzip2.local.nt0.time
+    # 10plusway-mapq.mmap.local.nt0.time
     fileName = os.path.basename(timeLog)
-    dset, fmt, protocol, run, ext = fileName.split('.')
+    try:
+        dset, fmt, protocol, ext = fileName.split('.')
+    except Exception as ex:
+        raise Exception("Error: {} parsing {}".format(str(ex), fileName))
     return RunMeta(dset, fmt, protocol)

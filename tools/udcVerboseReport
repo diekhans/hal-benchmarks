@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-
+import os
 import argparse
 from collections import namedtuple, defaultdict
+import re
 from benchmark import isoday, parseTimeFileMeta
+import statistics
 
 def parseArgs():
-    desc = """parts output files containing time -p and produce something resembling a
-    summary.   Has some built-in assumptions around metadata in experiment names.
-    Assumes:
+    desc = """parse UDC verbose messages from a file and print some info
 """
 
     parser = argparse.ArgumentParser(description=desc)
@@ -18,41 +18,79 @@ def parseArgs():
                         help="""output""")
     parser.add_argument("timeLogs", nargs="+",
                         help="""runs containing time -p""")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if os.path.splitext(args.summaryTsv)[1] != ".tsv":
+        parser.error("summaryTsv must end in .tsv, got " + args.summaryTsv)
+    return args
 
-class RunTime(namedtuple("RunTime", ("real", "user", "sys"))):
-    __slots__ = ()
-    def __add__(self, o):
-        return RunTime(self.real + o.real, self.user + o.user, self.sys + o.sys)
+class UdcStats():
+    def __init__(self, meta):
+        self.meta = meta
+        self.readCnt = 0
+        self.readTotalSize = 0
+        self.readSizes = []
+        self.minReadSize = 10000000000000
+        self.maxReadSize = 0
+        self.reopenCnt = 0
+        self.skipCnt = 0
 
-def parseTimeOutput(timeLog):
-    times = {}
+    @property
+    def medianReadSize(self):
+        return int(statistics.median(self.readSizes))
+
+
+def countUdcReading(line, stats):
+    # reading http/https/ftp data - 8192 bytes at 196608 - on http://hgwdev.gi.ucsc.edu/~markd/hal/data/10plusway-mapq.mmap.hal
+    m = re.match("reading http/https/ftp data - ([0-9]+) bytes at ([0-9]+)", line)
+    byteCnt, loc = m.groups()
+    byteCnt = int(byteCnt)
+    loc = int(loc)
+    stats.readCnt += 1
+    stats.readTotalSize += int(byteCnt)
+    stats.readSizes.append(byteCnt)
+    stats.minReadSize = min(byteCnt, stats.minReadSize)
+    stats.maxReadSize = max(byteCnt, stats.maxReadSize)
+
+def countUdcOffset(line, stats):
+    # Offset mismatch (ci 204800 != new 172032), reopening.
+    stats.reopenCnt += 1
+
+def countUdcSkipping(line, stats):
+    # !! skipping 32768 bytes @33107697664 to avoid reconnect
+    stats.skipCnt += 1
+
+def countUdcMsg(line, stats):
+    if line.startswith("reading http/https/ftp data"):
+        countUdcReading(line, stats)
+    elif line.startswith("Offset mismatch"):
+        countUdcOffset(line, stats)
+    elif line.startswith("!! skipping"):
+        countUdcSkipping(line, stats)
+
+def parseUdcVerboseOutput(timeLog):
+    stats = UdcStats(parseTimeFileMeta(timeLog))
     with open(timeLog) as fh:
         for line in fh:
-            row = line.split()
-            if len(row) >= 2:
-                if row[0] in ('real', 'user', 'sys'):
-                    times[row[0]] = float(row[1])
-    return RunTime(times["real"], times["user"], times["sys"])
+             countUdcMsg(line, stats)
+    return stats
 
 def collectRunResults(timeLogs):
-    results = defaultdict(lambda : RunTime(0.0, 0.0, 0.0))
+    results = []
     for timeLog in timeLogs:
-        runTime = parseTimeOutput(timeLog)
-        results[parseTimeFileMeta(timeLog)] += runTime
+        results.append(parseUdcVerboseOutput(timeLog))
     return results
 
 def outputResults(results, notes, outFh):
     day = isoday()
-    print("dset", "format", "protocol", "real", "user", "sys", "date", "notes", sep='\t', file=outFh)
-    for r in sorted(results.keys(), key=lambda r: (r.dset, r.protocol, r.fmt)):
-        t = results[r]
-        sp = "%0.2f"
-        print(r.dset, r.fmt, r.protocol, sp % t.real, sp % t.user, sp % t.sys, day, notes, sep='\t', file=outFh)
+    print("dset", "format", "protocol", "readCnt", "totalRead", "minRead", "maxRead", "medianRead", "reopenCnt", "skipCnt", "notes", "date", sep='\t', file=outFh)
+    for s in sorted(results, key=lambda r: (r.meta.dset, r.meta.protocol, r.meta.fmt)):
+        print(s.meta.dset, s.meta.fmt, s.meta.protocol,
+              s.readCnt, s.readTotalSize, s.minReadSize, s.maxReadSize, s.medianReadSize,
+              s.reopenCnt, s.skipCnt, notes, day, sep='\t', file=outFh)
 
-def exprTimeReport(args):
+def udcVerboseReport(args):
     results = collectRunResults(args.timeLogs)
     with open(args.summaryTsv, 'w') as outFh:
         outputResults(results, args.notes, outFh)
 
-exprTimeReport(parseArgs())
+udcVerboseReport(parseArgs())

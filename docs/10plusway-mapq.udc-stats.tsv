@@ -1,0 +1,3 @@
+dset	format	protocol	readCnt	totalRead	minRead	maxRead	medianRead	reopenCnt	skipCnt	notes	date
+10plusway-mapq	hdf5_gzip2	udc	1574	19374080	8192	16384	16384	1544	12	master	2018-12-08
+10plusway-mapq	mmap	udc	10069	1928192000	8192	270336	262144	2778	2	master	2018-12-08

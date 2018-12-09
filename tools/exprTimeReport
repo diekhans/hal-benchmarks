@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
-
+import os
 import argparse
-import os.path
-import re
 from collections import namedtuple, defaultdict
-
+from benchmark import isoday, parseTimeFileMeta
 
 def parseArgs():
     desc = """parts output files containing time -p and produce something resembling a
@@ -20,24 +18,18 @@ def parseArgs():
                         help="""output""")
     parser.add_argument("timeLogs", nargs="+",
                         help="""runs containing time -p""")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if os.path.splitext(args.summaryTsv)[1] != ".tsv":
+        parser.error("summaryTsv must end in .tsv, got " + args.summaryTsv)
+    return args
 
-class RunMeta(namedtuple("RunMeta", ("dset", "fmt", "protocol"))):
-    __slots__ = ()
-
-class RunTime(namedtuple("RunTime", ("real", "user", "sys"))):
+class RunTime(namedtuple("RunTime", ("real", "user", "sys", "blockCnt", "baseCnt"))):
     __slots__ = ()
     def __add__(self, o):
-        return RunTime(self.real + o.real, self.user + o.user, self.sys + o.sys)
-
-def parseMetadata(pathName):
-    # 10plusway-mapq.hdf5_gzip2.local.1.time
-    # 10plusway-mapq.mmap.local.1.time
-    fileName = os.path.basename(pathName)
-    dset, fmt, protocol, run, ext = fileName.split('.')
-    return RunMeta(dset, fmt, protocol)
+        return RunTime(self.real + o.real, self.user + o.user, self.sys + o.sys, self.blockCnt + o.blockCnt, self.baseCnt + o.baseCnt)
 
 def parseTimeOutput(timeLog):
+    # summing is not currently used as it was change to have a one-to-one
     times = {}
     with open(timeLog) as fh:
         for line in fh:
@@ -45,21 +37,24 @@ def parseTimeOutput(timeLog):
             if len(row) >= 2:
                 if row[0] in ('real', 'user', 'sys'):
                     times[row[0]] = float(row[1])
-    return RunTime(times["real"], times["user"], times["sys"])
+                elif row[0] in ('blockCnt:', 'baseCnt:'):
+                    times[row[0]] = int(row[1])
+    return RunTime(times["real"], times["user"], times["sys"], times["blockCnt:"], times["baseCnt:"])
 
 def collectRunResults(timeLogs):
-    results = defaultdict(lambda : RunTime(0.0, 0.0, 0.0))
+    results = defaultdict(lambda : RunTime(0.0, 0.0, 0.0, 0, 0))
     for timeLog in timeLogs:
         runTime = parseTimeOutput(timeLog)
-        results[parseMetadata(timeLog)] += runTime
+        results[parseTimeFileMeta(timeLog)] += runTime
     return results
 
 def outputResults(results, notes, outFh):
-    print("dset", "format", "protocol", "real", "user", "sys", "notes", sep='\t', file=outFh)
+    day = isoday()
+    print("dset", "format", "protocol", "real", "user", "sys", "notes", "blockCnt", "baseCnt", "date", sep='\t', file=outFh)
     for r in sorted(results.keys(), key=lambda r: (r.dset, r.protocol, r.fmt)):
         t = results[r]
         sp = "%0.2f"
-        print(r.dset, r.fmt, r.protocol, sp % t.real, sp % t.user, sp % t.sys, notes, sep='\t', file=outFh)
+        print(r.dset, r.fmt, r.protocol, sp % t.real, sp % t.user, sp % t.sys, notes, t.blockCnt, t.baseCnt, day, sep='\t', file=outFh)
 
 def exprTimeReport(args):
     results = collectRunResults(args.timeLogs)
