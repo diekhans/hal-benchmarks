@@ -23,7 +23,7 @@ ifeq (${gprof},yes)
     protocols = local
 endif
 
-master = no
+master = yes
 ifeq (${master},yes)
   binDir = ~/compbio/compartiveGenomics/projs/hal/src/hal-master-w-make/bin
   hals = 10plusway-mapq.hdf5_gzip2 10plusway-mapq.hdf5_uncmp
