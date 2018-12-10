@@ -30,7 +30,8 @@ class RunTime(namedtuple("RunTime", ("real", "user", "sys", "blockCnt", "baseCnt
 
 def parseTimeOutput(timeLog):
     # summing is not currently used as it was change to have a one-to-one
-    times = {}
+    times = {"blockCnt:": 0,
+             "baseCnt:": 0}
     with open(timeLog) as fh:
         for line in fh:
             row = line.split()
@@ -50,7 +51,8 @@ def collectRunResults(timeLogs):
 
 def outputResults(results, notes, outFh):
     day = isoday()
-    print("dset", "format", "protocol", "real", "user", "sys", "notes", "blockCnt", "baseCnt", "date", sep='\t', file=outFh)
+    header = ["dset", "format", "protocol", "real", "user", "sys", "notes", "blockCnt", "baseCnt", "date"]
+    print(*header, sep='\t', file=outFh)
     for r in sorted(results.keys(), key=lambda r: (r.dset, r.protocol, r.fmt)):
         t = results[r]
         sp = "%0.2f"

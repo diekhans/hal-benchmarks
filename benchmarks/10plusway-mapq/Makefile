@@ -3,6 +3,9 @@ protocols = local udc
 hals = 10plusway-mapq.hdf5_gzip2 10plusway-mapq.hdf5_uncmp 10plusway-mapq.mmap
 resultsDir = results
 
+benches = blockViz hal2maf
+benches =  hal2maf
+
 # UDC debugging
 udcDebug = no
 ifeq (${udcDebug},yes)
@@ -29,7 +32,9 @@ else
   binDir = ~/compbio/compartiveGenomics/projs/hal/src/hal/bin
 endif
 
+
 blockVizTest = ${binDir}/blockVizTest
+hal2maf = ${binDir}/hal2maf
 
 
 .SECONDARY:
@@ -41,16 +46,20 @@ udcCacheDir = /data/tmp/${USER}
 udcCacheFileDir = /data/tmp/${USER}/http/hgwdev.gi.ucsc.edu/Q7E${USER}/hal/data
 
 
-run: ${hals:%=run_%_hal}
+run: ${benches:%=run_%_bench}
+run_%_bench:
+	${MAKE} run_hal bench=$*
+run_hal: ${hals:%=run_%_hal}
 run_%_hal:
-	${MAKE} run_hal halBaseName=$*
-run_hal: ${protocols:%=run_%_hal_protocol}
-run_%_hal_protocol:
-	${MAKE} run_hal_protocl halBaseName=${halBaseName} protocol=$*
-run_hal_protocl: blockVizBenchFile
+	${MAKE} run_protocol bench=${bench} halBaseName=$*
+run_protocol: ${protocols:%=run_%_protocol}
+run_%_protocol:
+	${MAKE} runBench bench=${bench} halBaseName=${halBaseName} protocol=$*
+
 
 ##
 # called with:
+#   bench=
 #   halBaseName=
 #   protocol=udc|local
 ##
@@ -61,16 +70,15 @@ else
   halSpec = ${dataDir}/${halBaseName}.hal
 endif
 
-outDir = ${resultsDir}/${halBaseName}
+outDir = ${resultsDir}/${bench}/${halBaseName}
 resultBase = ${halBaseName}.${protocol}
+
+runBench: ${outDir}/${resultBase}.time
+
+# run blockviz for one pass for same hal
 blkVizSpec1 =  Mouse Human chr10 28000000 28999999
-
 blockVizOps = --doSeq ${udcVerbose} --udcCacheDir ${udcCacheDir}
-
-blockVizBenchFile: ${outDir}/${resultBase}.time
-
-# run sequentially for same hal
-${outDir}/${resultBase}.time:
+${resultsDir}/blockViz/${halBaseName}/${resultBase}.time:
 	@mkdir -p $(dir $@)
 ifeq (${protocol},udc)
 	rm -rf ${udcCacheFileDir}/${halBaseName}.hal
@@ -81,6 +89,24 @@ endif
 ifeq (${gprof},yes)
 	gprof ${blockVizTest} ${outDir}/${resultBase}.gmon.* >${outDir}/${resultBase}.gprof
 	gprof --line ${blockVizTest} ${outDir}/${resultBase}.gmon.* >${outDir}/${resultBase}.lgprof
+endif
+
+
+# run hal2maf
+
+hal2mafSpec = --refGenome Human --refSequence chr22 --start 28000000 --length 10000000
+blockVizOps = --udcCacheDir ${udcCacheDir}
+${resultsDir}/hal2maf/${halBaseName}/${resultBase}.time:
+	@mkdir -p $(dir $@)
+ifeq (${protocol},udc)
+	rm -rf ${udcCacheFileDir}/${halBaseName}.hal
+endif
+	rm -f ${outDir}/${resultBase}.gmon.*
+	(GMON_OUT_PREFIX=${outDir}/${resultBase}.gmon ${timeCmd} ${hal2maf} ${hal2mafOps} ${hal2mafSpec} ${halSpec} /dev/null) >& $@.tmp
+	mv -f $@.tmp $@
+ifeq (${gprof},yes)
+	gprof ${hal2maf} ${outDir}/${resultBase}.gmon.* >${outDir}/${resultBase}.gprof
+	gprof --line ${hal2maf} ${outDir}/${resultBase}.gmon.* >${outDir}/${resultBase}.lgprof
 endif
 
 
