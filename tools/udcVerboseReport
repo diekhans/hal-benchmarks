@@ -41,7 +41,7 @@ class UdcStats():
 
 def countUdcReading(line, stats):
     # reading http/https/ftp data - 8192 bytes at 196608 - on http://hgwdev.gi.ucsc.edu/~markd/hal/data/10plusway-mapq.mmap.hal
-    m = re.match("reading http/https/ftp data - ([0-9]+) bytes at ([0-9]+)", line)
+    m = re.match("reading http/https.* data - ([0-9]+) bytes at ([0-9]+)", line)
     byteCnt, loc = m.groups()
     byteCnt = int(byteCnt)
     loc = int(loc)
@@ -55,17 +55,22 @@ def countUdcOffset(line, stats):
     # Offset mismatch (ci 204800 != new 172032), reopening.
     stats.reopenCnt += 1
 
+def countAboutToConnect(line, stats):
+    stats.reopenCnt += 1
+
 def countUdcSkipping(line, stats):
     # !! skipping 32768 bytes @33107697664 to avoid reconnect
     stats.skipCnt += 1
 
 def countUdcMsg(line, stats):
-    if line.startswith("reading http/https/ftp data"):
+    if line.startswith("reading http/https"):
         countUdcReading(line, stats)
     elif line.startswith("Offset mismatch"):
         countUdcOffset(line, stats)
     elif line.startswith("!! skipping"):
         countUdcSkipping(line, stats)
+    elif line.find("About to connect() to") >= 0:
+        countAboutToConnect(line, stats)
 
 def parseUdcVerboseOutput(timeLog):
     stats = UdcStats(parseTimeFileMeta(timeLog))

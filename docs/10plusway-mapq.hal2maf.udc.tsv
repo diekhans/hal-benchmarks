@@ -4,8 +4,6 @@ dset	format	protocol	real	user	sys	notes	blockCnt	baseCnt	date
 10plusway-mapq	hdf5_gzip2	udc	724.67	717.00	4.74	baseline	0	0	2018-12-09
 10plusway-mapq	hdf5_uncmp	udc	732.81	725.53	4.51	baseline	0	0	2018-12-09
 10plusway-mapq	mmap	udc	3502.00	903.29	966.66	baseline	0	0	2018-12-09
-10plusway-mapq	hdf5_gzip2	udc	1178.32	1172.69	5.45	master run 2	0	0	2018-12-10
-10plusway-mapq	hdf5_uncmp	udc	1150.99	1148.04	2.78	master run 2	0	0	2018-12-10
-10plusway-mapq	hdf5_gzip2	udc	937.31	905.73	7.48	baseline run 2	0	0	2018-12-10
-10plusway-mapq	hdf5_uncmp	udc	943.76	903.07	8.04	baseline run 2	0	0	2018-12-10
-10plusway-mapq	mmap	udc	765.66	362.31	403.21	baseline run 2	0	0	2018-12-10
+10plusway-mapq	hdf5_gzip2	udc	1229.71	835.34	13.31	libcurl	0	0	2018-12-30
+10plusway-mapq	hdf5_uncmp	udc	1243.40	797.00	14.04	libcurl	0	0	2018-12-30
+10plusway-mapq	mmap	udc	1892.55	449.17	510.38	libcurl	0	0	2018-12-30

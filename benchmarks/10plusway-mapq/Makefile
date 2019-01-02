@@ -3,27 +3,29 @@ protocols = local udc
 hals = 10plusway-mapq.hdf5_gzip2 10plusway-mapq.hdf5_uncmp 10plusway-mapq.mmap
 resultsDir = results
 
-benches = blockViz hal2maf
-benches =  hal2maf
+#benches = blockViz hal2maf
+#benches =  hal2maf
+benches = blockViz
+
+numThreads = 10
 
 # UDC debugging
-udcDebug = no
+udcDebug = yes
 ifeq (${udcDebug},yes)
    udcVerbose = --udcVerbose
    protocols = udc
-   #hals = 10plusway-mapq.mmap
+   hals = 10plusway-mapq.mmap 10plusway-mapq.hdf5_gzip2
 endif
 
 # gprof
 gprof = no
 ifeq (${gprof},yes)
     hals = 10plusway-mapq.mmap
-    #hals = 10plusway-mapq.hdf5_gzip2
     #protocols = udc
     protocols = local
 endif
 
-master = yes
+master = no
 ifeq (${master},yes)
   binDir = ~/compbio/compartiveGenomics/projs/hal/src/hal-master-w-make/bin
   hals = 10plusway-mapq.hdf5_gzip2 10plusway-mapq.hdf5_uncmp
@@ -40,10 +42,10 @@ hal2maf = ${binDir}/hal2maf
 .SECONDARY:
 
 dataDir = ../../data
-dataUrl =  http://hgwdev.gi.ucsc.edu/~markd/hal/data
+dataUrl =  https://hgwdev.gi.ucsc.edu/~markd/hal/data
 timeCmd = /usr/bin/time -p
-udcCacheDir = /data/tmp/${USER}
-udcCacheFileDir = /data/tmp/${USER}/http/hgwdev.gi.ucsc.edu/Q7E${USER}/hal/data
+udcCacheDir = /data/tmp/${USER}/${bench}
+udcCacheFileDir = /data/tmp/${USER}/${bench}/https/hgwdev.gi.ucsc.edu/Q7E${USER}/hal/data
 
 
 run: ${benches:%=run_%_bench}
@@ -77,7 +79,7 @@ runBench: ${outDir}/${resultBase}.time
 
 # run blockviz for one pass for same hal
 blkVizSpec1 =  Mouse Human chr10 28000000 28999999
-blockVizOps = --doSeq ${udcVerbose} --udcCacheDir ${udcCacheDir}
+blockVizOps = --doSeq ${udcVerbose} --udcCacheDir ${udcCacheDir} --numThreads ${numThreads}
 ${resultsDir}/blockViz/${halBaseName}/${resultBase}.time:
 	@mkdir -p $(dir $@)
 ifeq (${protocol},udc)
@@ -95,7 +97,7 @@ endif
 # run hal2maf
 
 hal2mafSpec = --refGenome Human --refSequence chr22 --start 28000000 --length 10000000
-blockVizOps = --udcCacheDir ${udcCacheDir}
+hal2mafOps = --udcCacheDir ${udcCacheDir} ${udcVerbose}
 ${resultsDir}/hal2maf/${halBaseName}/${resultBase}.time:
 	@mkdir -p $(dir $@)
 ifeq (${protocol},udc)
