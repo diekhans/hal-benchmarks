@@ -1,0 +1,4 @@
+dset	format	protocol	real	user	sys	notes	blockCnt	baseCnt	date
+10plusway-mapq	hdf5_gzip2	udc	48.22	46.42	0.46	1-pass/libcurl	13682	233005	2019-01-02
+10plusway-mapq	hdf5_uncmp	udc	50.09	48.19	0.55	1-pass/libcurl	13682	233005	2019-01-02
+10plusway-mapq	mmap	udc	138.82	59.88	70.87	1-pass/libcurl	13682	233005	2019-01-02

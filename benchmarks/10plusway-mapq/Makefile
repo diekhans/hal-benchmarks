@@ -8,13 +8,14 @@ resultsDir = results
 benches = blockViz
 
 numThreads = 10
+#numThreads = 0
 
 # UDC debugging
-udcDebug = yes
+udcDebug = no
 ifeq (${udcDebug},yes)
    udcVerbose = --udcVerbose
    protocols = udc
-   hals = 10plusway-mapq.mmap 10plusway-mapq.hdf5_gzip2
+   hals = 10plusway-mapq.mmap 10plusway-mapq.hdf5_uncmp 10plusway-mapq.hdf5_gzip2
 endif
 
 # gprof
