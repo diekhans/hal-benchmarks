@@ -7,8 +7,8 @@ resultsDir = results
 #benches =  hal2maf
 benches = blockViz
 
-numThreads = 10
-#numThreads = 0
+# numThreads = 10
+numThreads = 0
 
 # UDC debugging
 udcDebug = no
@@ -21,9 +21,9 @@ endif
 # gprof
 gprof = no
 ifeq (${gprof},yes)
-    hals = 10plusway-mapq.mmap
+    hals = 10plusway-mapq.mmap 10plusway-mapq.hdf5_gzip2
     #protocols = udc
-    protocols = local
+    #protocols = local
 endif
 
 master = no
